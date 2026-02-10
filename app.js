@@ -1,5 +1,4 @@
-import { db } from './firebase-config.js';
-import { collection, addDoc, getDocs, updateDoc, doc, arrayUnion, onSnapshot, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { supabase } from './supabase-config.js';
 
 // State
 let allSubjects = [];
@@ -42,21 +41,34 @@ const cancelDeleteBtn = document.getElementById('cancel-delete');
 let subjectIdToDelete = null;
 
 // Initialization
-// Listen for real-time updates
-const subjectsRef = collection(db, "subjects");
+window.addEventListener('DOMContentLoaded', () => {
+    fetchSubjects();
 
-onSnapshot(subjectsRef, (snapshot) => {
-    allSubjects = [];
-    snapshot.docs.forEach(doc => {
-        allSubjects.push({ ...doc.data(), id: doc.id });
-    });
-    renderHome();
-}, (error) => {
-    console.error("Error getting documents: ", error);
-    if (error.code === 'permission-denied' || error.code === 'api-key-not-valid') {
-        subjectList.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center; color: var(--error);">Error connecting to Database. Please check your <code>firebase-config.js</code> API keys.</p>';
-    }
+    // Subscribe to realtime changes
+    const channel = supabase
+        .channel('public:subjects')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'subjects' }, payload => {
+            console.log('Change received!', payload);
+            fetchSubjects();
+        })
+        .subscribe();
 });
+
+async function fetchSubjects() {
+    const { data, error } = await supabase
+        .from('subjects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching data:', error);
+        subjectList.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center; color: var(--error);">Error connecting to Database. Please check your <code>supabase-config.js</code> API keys.</p>';
+        return;
+    }
+
+    allSubjects = data || [];
+    renderHome();
+}
 
 
 function renderHome() {
@@ -105,10 +117,8 @@ function openAddModal(existingName = '') {
     const titleEl = addModal.querySelector('h2');
     if (existingName) {
         titleEl.textContent = `Add Questions to "${existingName}"`;
-        // subjectNameInput.disabled = true; // Optional: lock it to ensure safety
     } else {
         titleEl.textContent = 'Add New Subject';
-        // subjectNameInput.disabled = false;
     }
 }
 
@@ -170,38 +180,45 @@ saveSubjectBtn.addEventListener('click', async () => {
             }
         });
 
-        // Check if exists in DB
+        // Check if exists in DB (to avoid creating duplicates if name matches explicitly, though logic handles updates)
         saveSubjectBtn.innerText = "Saving...";
         saveSubjectBtn.disabled = true;
 
-        const q = query(subjectsRef, where("name", "==", name));
-        const querySnapshot = await getDocs(q);
+        // Check if subject exists (case insensitive?) - Supabase strict match for now
+        // Let's rely on finding by name in our local list first to get ID if possible, 
+        // OR query Supabase. Querying is safer for multi-user.
 
-        if (!querySnapshot.empty) {
+        const { data: existingSubjects, error: searchError } = await supabase
+            .from('subjects')
+            .select('*')
+            .eq('name', name);
+
+        if (searchError) throw searchError;
+
+        if (existingSubjects && existingSubjects.length > 0) {
             // Update existing
-            const docRef = querySnapshot.docs[0].ref;
-            const existingData = querySnapshot.docs[0].data();
+            const subjectToUpdate = existingSubjects[0];
+            const updatedQuestions = (subjectToUpdate.questions || []).concat(questions);
 
-            // We need to concat. Firestore arrayUnion only adds UNIQUE elements.
-            // But questions are objects, so uniqueness is strict. 
-            // It's safer to read, merge, and update.
-            const updatedQuestions = (existingData.questions || []).concat(questions);
+            const { error: updateError } = await supabase
+                .from('subjects')
+                .update({ questions: updatedQuestions })
+                .eq('id', subjectToUpdate.id);
 
-            await updateDoc(docRef, {
-                questions: updatedQuestions
-            });
+            if (updateError) throw updateError;
 
             alert(`Subject "${name}" updated! Added ${questions.length} new questions.`);
         } else {
             // Create new
-            await addDoc(subjectsRef, {
-                name: name,
-                questions: questions
-            });
+            const { error: insertError } = await supabase
+                .from('subjects')
+                .insert([{ name: name, questions: questions }]);
+
+            if (insertError) throw insertError;
         }
 
         addModal.classList.add('hidden');
-        renderHome(); // Snapshot will trigger re-render anyway, but this feels snappy
+        fetchSubjects();
 
     } catch (err) {
         modalError.textContent = 'Error: ' + err.message;
@@ -220,9 +237,16 @@ function initDeleteSubject(id) {
 confirmDeleteBtn.addEventListener('click', async () => {
     if (subjectIdToDelete) {
         try {
-            await deleteDoc(doc(db, "subjects", subjectIdToDelete));
+            const { error } = await supabase
+                .from('subjects')
+                .delete()
+                .eq('id', subjectIdToDelete);
+
+            if (error) throw error;
+
             confirmModal.classList.add('hidden');
             subjectIdToDelete = null;
+            fetchSubjects();
         } catch (e) {
             alert("Error deleting: " + e.message);
         }
@@ -235,7 +259,7 @@ cancelDeleteBtn.addEventListener('click', () => {
 });
 
 
-// Quiz Logic (Mostly unchanged, just using new structure)
+// Quiz Logic 
 function startQuiz(index) {
     currentSubjectIndex = index;
     const subject = allSubjects[index];
@@ -361,6 +385,4 @@ homeBtn.addEventListener('click', () => {
     renderHome();
 });
 
-// Expose handleAnswer to window? No, event listeners used.
-// Expose functions if needed for debugging
-window.db = db;
+window.supabase = supabase;
