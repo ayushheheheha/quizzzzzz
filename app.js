@@ -27,6 +27,8 @@ const questionCounter = document.getElementById('question-counter');
 const progressFill = document.getElementById('progress-fill');
 const currentScoreEl = document.getElementById('current-score');
 const exitQuizBtn = document.getElementById('exit-quiz-btn');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
 
 // Result Elements
 const finalScoreEl = document.getElementById('final-score');
