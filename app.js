@@ -297,6 +297,21 @@ function startQuiz(index) {
     updateNavButtons();
 }
 
+function calculateScore() {
+    let currentScore = 0;
+    const subject = allSubjects[currentSubjectIndex];
+
+    if (!subject || !subject.questions) return 0;
+
+    subject.questions.forEach((q, i) => {
+        if (userAnswers[i] === q.answer) {
+            currentScore += 10;
+        }
+    });
+
+    return currentScore;
+}
+
 function updateHeader() {
     const subject = allSubjects[currentSubjectIndex];
     const total = subject.questions.length;
@@ -542,12 +557,5 @@ function updatePaletteActiveState() {
     });
 }
 
-// Palette Toggles - Removed as now persistent sidebar
-// paletteToggleBtn.addEventListener('click', () => { ... });
-// closePaletteBtn.addEventListener('click', () => { ... });
 
-// Window click for palette modal - Removed
-
-
-// ... existing code ...
 
