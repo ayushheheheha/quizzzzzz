@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -36,11 +38,13 @@
                 <button id="exit-quiz-btn" class="btn-text">← Exit</button>
                 <div class="progress-container">
                     <span id="question-counter">Question 1/10</span>
-                    <div class="progress-bar"><div id="progress-fill"></div></div>
+                    <div class="progress-bar">
+                        <div id="progress-fill"></div>
+                    </div>
                 </div>
                 <div class="score-badge">Score: <span id="current-score">0</span></div>
             </div>
-            
+
             <div class="question-card">
                 <h2 id="question-text">Loading Question...</h2>
                 <div id="options-container" class="options-grid">
@@ -96,7 +100,7 @@
     </div>
 
     <!-- Confirmation Modal -->
-     <div id="confirm-modal" class="modal hidden">
+    <div id="confirm-modal" class="modal hidden">
         <div class="modal-content small-modal">
             <h3>Delete this subject?</h3>
             <p>This action cannot be undone.</p>
@@ -107,7 +111,9 @@
         </div>
     </div>
 
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+    <!-- <script src="data.js"></script> -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
+
 </html>

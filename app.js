@@ -1,9 +1,11 @@
+import { db } from './firebase-config.js';
+import { collection, addDoc, getDocs, updateDoc, doc, arrayUnion, onSnapshot, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 // State
 let allSubjects = [];
 let currentSubjectIndex = -1;
 let currentQuestionIndex = 0;
 let score = 0;
-let userAnswers = []; // To track history if needed later
 
 // DOM Elements
 const homeSection = document.getElementById('home-section');
@@ -37,41 +39,31 @@ const homeBtn = document.getElementById('home-btn');
 const confirmModal = document.getElementById('confirm-modal');
 const confirmDeleteBtn = document.getElementById('confirm-delete');
 const cancelDeleteBtn = document.getElementById('cancel-delete');
-let subjectToDeleteIndex = -1;
-
+let subjectIdToDelete = null;
 
 // Initialization
-window.addEventListener('DOMContentLoaded', () => {
-    loadData();
+// Listen for real-time updates
+const subjectsRef = collection(db, "subjects");
+
+onSnapshot(subjectsRef, (snapshot) => {
+    allSubjects = [];
+    snapshot.docs.forEach(doc => {
+        allSubjects.push({ ...doc.data(), id: doc.id });
+    });
     renderHome();
+}, (error) => {
+    console.error("Error getting documents: ", error);
+    if (error.code === 'permission-denied' || error.code === 'api-key-not-valid') {
+        subjectList.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center; color: var(--error);">Error connecting to Database. Please check your <code>firebase-config.js</code> API keys.</p>';
+    }
 });
 
-// Logic
-function loadData() {
-    const storedSubjects = localStorage.getItem('quizSubjects');
-    if (storedSubjects) {
-        allSubjects = JSON.parse(storedSubjects);
-    } else {
-        // Load default data from data.js if exists
-        if (typeof defaultSubjects !== 'undefined') {
-            allSubjects = defaultSubjects;
-            saveData();
-        }
-    }
-}
-
-function saveData() {
-    localStorage.setItem('quizSubjects', JSON.stringify(allSubjects));
-    renderHome();
-}
 
 function renderHome() {
     subjectList.innerHTML = '';
 
-    // Add "New" Card ?? No, button in header is enough.
-
     if (allSubjects.length === 0) {
-        subjectList.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center;">No subjects found. Click "Add Subject" to begin!</p>';
+        subjectList.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center;">No subjects found in the database. Add one!</p>';
         return;
     }
 
@@ -80,7 +72,7 @@ function renderHome() {
         card.className = 'subject-card';
         card.innerHTML = `
             <h3>${subject.name}</h3>
-            <p>${subject.questions.length} Questions</p>
+            <p>${subject.questions ? subject.questions.length : 0} Questions</p>
             <div class="delete-subject-btn" title="Delete Subject">&times;</div>
         `;
 
@@ -89,7 +81,7 @@ function renderHome() {
             // Check if delete button was clicked
             if (e.target.classList.contains('delete-subject-btn')) {
                 e.stopPropagation();
-                initDeleteSubject(index);
+                initDeleteSubject(subject.id);
             } else {
                 startQuiz(index);
             }
@@ -121,7 +113,7 @@ window.addEventListener('click', (e) => {
     }
 });
 
-saveSubjectBtn.addEventListener('click', () => {
+saveSubjectBtn.addEventListener('click', async () => {
     let name = subjectNameInput.value.trim();
     const jsonStr = jsonInput.value.trim();
 
@@ -136,14 +128,11 @@ saveSubjectBtn.addEventListener('click', () => {
 
         // Handle different formats
         if (Array.isArray(parsedData)) {
-            // Old format: just an array of questions
             questions = parsedData;
         } else if (typeof parsedData === 'object' && parsedData !== null) {
-            // New format: Object with quiz_title and questions
             if (parsedData.questions && Array.isArray(parsedData.questions)) {
                 questions = parsedData.questions;
             }
-            // Use quiz_title if name input is empty
             if (!name && parsedData.quiz_title) {
                 name = parsedData.quiz_title;
             }
@@ -154,53 +143,87 @@ saveSubjectBtn.addEventListener('click', () => {
             return;
         }
 
-        // Simple validation
         if (!Array.isArray(questions) || questions.length === 0) {
             throw new Error('Could not find a valid list of questions in the JSON.');
         }
 
         questions.forEach((q, i) => {
             if (!q.question || !q.options || !q.answer || !Array.isArray(q.options)) {
-                throw new Error(`Question #${i + 1} is missing required fields (question, options, answer).`);
+                throw new Error(`Question #${i + 1} is missing required fields.`);
             }
         });
 
-        allSubjects.push({ name, questions });
-        saveData();
+        // Check if exists in DB
+        saveSubjectBtn.innerText = "Saving...";
+        saveSubjectBtn.disabled = true;
+
+        const q = query(subjectsRef, where("name", "==", name));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            // Update existing
+            const docRef = querySnapshot.docs[0].ref;
+            const existingData = querySnapshot.docs[0].data();
+
+            // We need to concat. Firestore arrayUnion only adds UNIQUE elements.
+            // But questions are objects, so uniqueness is strict. 
+            // It's safer to read, merge, and update.
+            const updatedQuestions = (existingData.questions || []).concat(questions);
+
+            await updateDoc(docRef, {
+                questions: updatedQuestions
+            });
+
+            alert(`Subject "${name}" updated! Added ${questions.length} new questions.`);
+        } else {
+            // Create new
+            await addDoc(subjectsRef, {
+                name: name,
+                questions: questions
+            });
+        }
+
         addModal.classList.add('hidden');
-        renderHome();
+        renderHome(); // Snapshot will trigger re-render anyway, but this feels snappy
 
     } catch (err) {
-        modalError.textContent = 'Invalid JSON: ' + err.message;
+        modalError.textContent = 'Error: ' + err.message;
+        console.error(err);
+    } finally {
+        saveSubjectBtn.innerText = "Save Subject";
+        saveSubjectBtn.disabled = false;
     }
 });
 
-function initDeleteSubject(index) {
-    subjectToDeleteIndex = index;
+function initDeleteSubject(id) {
+    subjectIdToDelete = id;
     confirmModal.classList.remove('hidden');
 }
 
-confirmDeleteBtn.addEventListener('click', () => {
-    if (subjectToDeleteIndex > -1) {
-        allSubjects.splice(subjectToDeleteIndex, 1);
-        saveData();
-        confirmModal.classList.add('hidden');
-        subjectToDeleteIndex = -1;
+confirmDeleteBtn.addEventListener('click', async () => {
+    if (subjectIdToDelete) {
+        try {
+            await deleteDoc(doc(db, "subjects", subjectIdToDelete));
+            confirmModal.classList.add('hidden');
+            subjectIdToDelete = null;
+        } catch (e) {
+            alert("Error deleting: " + e.message);
+        }
     }
 });
 
 cancelDeleteBtn.addEventListener('click', () => {
     confirmModal.classList.add('hidden');
-    subjectToDeleteIndex = -1;
+    subjectIdToDelete = null;
 });
 
 
-// Quiz Logic
+// Quiz Logic (Mostly unchanged, just using new structure)
 function startQuiz(index) {
     currentSubjectIndex = index;
     const subject = allSubjects[index];
 
-    if (subject.questions.length === 0) {
+    if (!subject.questions || subject.questions.length === 0) {
         alert("This subject has no questions.");
         return;
     }
@@ -208,7 +231,6 @@ function startQuiz(index) {
     currentQuestionIndex = 0;
     score = 0;
 
-    // Switch Views
     homeSection.classList.add('hidden');
     resultSection.classList.add('hidden');
     quizSection.classList.remove('hidden');
@@ -236,9 +258,6 @@ function renderQuestion() {
     questionText.textContent = questionData.question;
     optionsContainer.innerHTML = '';
 
-    // Randomize options? optional. For now, keep as is to preserve logic with 'answer'.
-    // Or better, just render them.
-
     questionData.options.forEach(option => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -251,7 +270,6 @@ function renderQuestion() {
 }
 
 function handleAnswer(selected, btnElement, correct) {
-    // Disable all buttons to prevent double clicking
     const allBtns = optionsContainer.querySelectorAll('.option-btn');
     allBtns.forEach(b => b.disabled = true);
 
@@ -261,7 +279,6 @@ function handleAnswer(selected, btnElement, correct) {
         currentScoreEl.textContent = score;
     } else {
         btnElement.classList.add('wrong');
-        // Highlight correct one
         allBtns.forEach(b => {
             if (b.textContent === correct) {
                 b.classList.add('correct');
@@ -269,7 +286,6 @@ function handleAnswer(selected, btnElement, correct) {
         });
     }
 
-    // Wait then next question
     setTimeout(() => {
         nextQuestion();
     }, 1200);
@@ -310,9 +326,7 @@ function showResult() {
     }
 }
 
-// Navigation Events
 exitQuizBtn.addEventListener('click', () => {
-    // Maybe confirm?
     homeSection.classList.remove('hidden');
     quizSection.classList.add('hidden');
     resultSection.classList.add('hidden');
@@ -329,3 +343,7 @@ homeBtn.addEventListener('click', () => {
     resultSection.classList.add('hidden');
     renderHome();
 });
+
+// Expose handleAnswer to window? No, event listeners used.
+// Expose functions if needed for debugging
+window.db = db;
