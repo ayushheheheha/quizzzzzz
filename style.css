@@ -351,18 +351,49 @@ button {
     box-shadow: none;
 }
 
-.palette-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 10px;
-    margin-top: 20px;
-    max-height: 300px;
+/* Quiz Layout */
+.quiz-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.quiz-sidebar {
+    width: 280px;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    flex-shrink: 0;
+    max-height: 80vh;
     overflow-y: auto;
 }
 
+.quiz-sidebar h3 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+}
+
+.quiz-content {
+    flex-grow: 1;
+    width: 100%;
+    /* Ensure it takes available space */
+}
+
+/* Palette Styles */
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 8px;
+}
+
 .palette-btn {
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    /* Fill grid cell */
+    aspect-ratio: 1;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: var(--card-bg);
@@ -373,6 +404,7 @@ button {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    font-size: 0.9rem;
 }
 
 .palette-btn:hover {
@@ -382,15 +414,40 @@ button {
 
 .palette-btn.current {
     border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.2);
+    background: var(--primary);
     color: white;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
 .palette-btn.answered {
     background: rgba(16, 185, 129, 0.2);
     border-color: var(--success);
     color: var(--success);
+}
+
+.palette-btn.answered.current {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+
+/* Responsive Layout */
+@media (max-width: 900px) {
+    .quiz-layout {
+        flex-direction: column-reverse;
+        /* Put palette below or above? Standard is below on mobile usually, or toggle. User asked for visible though. */
+    }
+
+    .quiz-layout {
+        flex-direction: column;
+    }
+
+    .quiz-sidebar {
+        width: 100%;
+        max-height: 200px;
+        /* Constrain height on mobile */
+    }
 }
 
 /* Result Section */

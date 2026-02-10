@@ -34,38 +34,40 @@
 
         <!-- Quiz Section -->
         <section id="quiz-section" class="hidden">
-            <div class="quiz-header">
-                <button id="exit-quiz-btn" class="btn-text">← Exit</button>
-                <div class="progress-container">
-                    <span id="question-counter">Question 1/10</span>
-                    <div class="progress-bar">
-                        <div id="progress-fill"></div>
-                    </div>
-                </div>
-                <button id="palette-toggle-btn" class="btn-secondary" style="padding: 5px 10px;">🔢 Map</button>
-                <div class="score-badge">Score: <span id="current-score">0</span></div>
-            </div>
-
-            <div id="question-palette-modal" class="modal hidden">
-                <div class="modal-content small-modal">
-                    <span id="close-palette-btn" class="close-btn">&times;</span>
-                    <h3>Question Map</h3>
+            <div class="quiz-layout">
+                <!-- Left Sidebar: Question Map -->
+                <aside class="quiz-sidebar">
+                    <h3>Questions</h3>
                     <div id="question-palette-grid" class="palette-grid">
                         <!-- Numbers injected here -->
                     </div>
-                </div>
-            </div>
+                </aside>
 
-            <div class="question-card">
-                <h2 id="question-text">Loading Question...</h2>
-                <div id="options-container" class="options-grid">
-                    <!-- Options injected here -->
-                </div>
+                <!-- Right Content: Quiz -->
+                <main class="quiz-content">
+                    <div class="quiz-header">
+                        <button id="exit-quiz-btn" class="btn-text">← Exit</button>
+                        <div class="progress-container">
+                            <span id="question-counter">Question 1/10</span>
+                            <div class="progress-bar">
+                                <div id="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="score-badge">Score: <span id="current-score">0</span></div>
+                    </div>
 
-                <div class="quiz-nav">
-                    <button id="prev-btn" class="btn-secondary nav-btn" disabled>❮ Previous</button>
-                    <button id="next-btn" class="btn-primary nav-btn">Next ❯</button>
-                </div>
+                    <div class="question-card">
+                        <h2 id="question-text">Loading Question...</h2>
+                        <div id="options-container" class="options-grid">
+                            <!-- Options injected here -->
+                        </div>
+
+                        <div class="quiz-nav">
+                            <button id="prev-btn" class="btn-secondary nav-btn" disabled>❮ Previous</button>
+                            <button id="next-btn" class="btn-primary nav-btn">Next ❯</button>
+                        </div>
+                    </div>
+                </main>
             </div>
         </section>
 

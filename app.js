@@ -5,6 +5,7 @@ let allSubjects = [];
 let currentSubjectIndex = -1;
 let currentQuestionIndex = 0;
 let score = 0;
+let userAnswers = [];
 
 // DOM Elements
 const homeSection = document.getElementById('home-section');
@@ -277,6 +278,7 @@ function startQuiz(index) {
 
     currentQuestionIndex = 0;
     score = 0;
+    userAnswers = new Array(subject.questions.length).fill(null);
 
     homeSection.classList.add('hidden');
     resultSection.classList.add('hidden');
@@ -339,10 +341,33 @@ function handleAnswer(selected, btnElement, correct) {
         });
     }
 
-    setTimeout(() => {
-        nextQuestion();
-    }, 1200);
+    // Auto-advance removed as per request
+    // setTimeout(() => {
+    //     nextQuestion();
+    // }, 1200);
 }
+
+// Navigation Listeners
+prevBtn.addEventListener('click', () => {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestion();
+        updateHeader();
+        updateNavButtons();
+    }
+});
+
+nextBtn.addEventListener('click', () => {
+    const subject = allSubjects[currentSubjectIndex];
+    if (currentQuestionIndex < subject.questions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestion();
+        updateHeader();
+        updateNavButtons();
+    } else {
+        showResult();
+    }
+});
 
 function nextQuestion() {
     const subject = allSubjects[currentSubjectIndex];
@@ -421,12 +446,6 @@ function renderPalette() {
             renderQuestion();
             updateHeader();
             updateNavButtons();
-            // updatePaletteActiveState(); // handled in updateHeader? or separate
-            // If modal is open, maybe close it? Or keep it open. 
-            // User typically wants to jump multiple times or just once.
-            // Let's keep it open or optional. Structure implies it overlays, so maybe close it for better view?
-            // Let's toggle it off to see the question.
-            paletteModal.classList.add('hidden');
         };
 
         paletteGrid.appendChild(btn);
@@ -450,27 +469,12 @@ function updatePaletteActiveState() {
     });
 }
 
-// Palette Toggles
-paletteToggleBtn.addEventListener('click', () => {
-    paletteModal.classList.remove('hidden');
-    renderPalette(); // Refresh just in case
-});
+// Palette Toggles - Removed as now persistent sidebar
+// paletteToggleBtn.addEventListener('click', () => { ... });
+// closePaletteBtn.addEventListener('click', () => { ... });
 
-closePaletteBtn.addEventListener('click', () => {
-    paletteModal.classList.add('hidden');
-});
+// Window click for palette modal - Removed
 
-// Window click for palette modal
-// Merged into existing window click listener if possible, or new one.
-// Existing: window.addEventListener('click', (e) => { ... }) handles modals.
-// Let's just double check the existing one handles generic class 'modal' or specific.
-// The existing one checks `if (e.target === addModal)`. We need to add `paletteModal`.
-
-window.addEventListener('click', (e) => {
-    if (e.target === paletteModal) {
-        paletteModal.classList.add('hidden');
-    }
-});
 
 // ... existing code ...
 
