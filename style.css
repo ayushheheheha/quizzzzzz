@@ -425,7 +425,14 @@ button {
     color: var(--success);
 }
 
-.palette-btn.answered.current {
+.palette-btn.skipped {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.palette-btn.answered.current,
+.palette-btn.skipped.current {
     background: var(--primary);
     color: white;
     border-color: var(--primary);

@@ -6,6 +6,7 @@ let currentSubjectIndex = -1;
 let currentQuestionIndex = 0;
 let score = 0;
 let userAnswers = [];
+let visitedQuestions = new Set();
 
 // DOM Elements
 const homeSection = document.getElementById('home-section');
@@ -283,6 +284,7 @@ function startQuiz(index) {
     currentQuestionIndex = 0;
     score = 0;
     userAnswers = new Array(subject.questions.length).fill(null);
+    visitedQuestions = new Set(); // Track visited questions
     console.log("Starting quiz. Questions:", subject.questions.length);
 
     homeSection.classList.add('hidden');
@@ -317,6 +319,10 @@ function renderQuestion() {
 
     questionText.textContent = questionData.question;
     optionsContainer.innerHTML = '';
+
+    // Mark as visited
+    if (visitedQuestions) visitedQuestions.add(currentQuestionIndex);
+    updatePaletteActiveState(); // Update palette immediately to reflect visited status
 
     questionData.options.forEach(option => {
         const btn = document.createElement('button');
@@ -480,10 +486,17 @@ function renderPalette() {
 
             // Initial state
             // Inline null check for safety
-            if (typeof userAnswers !== 'undefined' && userAnswers[i] !== null && userAnswers[i] !== undefined) {
+            const isAnswered = typeof userAnswers !== 'undefined' && userAnswers[i] !== null && userAnswers[i] !== undefined;
+            const isVisited = visitedQuestions.has(i);
+            const isCurrent = i === currentQuestionIndex;
+
+            if (isAnswered) {
                 btn.classList.add('answered');
+            } else if (isVisited && !isCurrent) {
+                btn.classList.add('skipped');
             }
-            if (i === currentQuestionIndex) {
+
+            if (isCurrent) {
                 btn.classList.add('current');
             }
 
@@ -510,16 +523,21 @@ function updatePaletteActiveState() {
 
     const btns = paletteGrid.querySelectorAll('.palette-btn');
     btns.forEach((btn, i) => {
-        // Reset current
-        btn.classList.remove('current');
+        // Reset classes
+        btn.classList.remove('current', 'answered', 'skipped');
 
-        if (i === currentQuestionIndex) {
-            btn.classList.add('current');
+        const isAnswered = userAnswers && userAnswers[i] !== null;
+        const isVisited = visitedQuestions.has(i);
+        const isCurrent = i === currentQuestionIndex;
+
+        if (isAnswered) {
+            btn.classList.add('answered');
+        } else if (isVisited && !isCurrent) {
+            btn.classList.add('skipped');
         }
 
-        // Update answered state (in case we want real-time feedback without re-rendering all)
-        if (userAnswers && userAnswers[i] !== null) {
-            btn.classList.add('answered');
+        if (isCurrent) {
+            btn.classList.add('current');
         }
     });
 }
