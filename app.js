@@ -75,6 +75,20 @@ async function fetchSubjects() {
     }
 
     allSubjects = data || [];
+
+    // Check for saved progress
+    if (loadQuizState()) {
+        const subject = allSubjects[currentSubjectIndex];
+        // Validate question count match (optional but good safety)
+        if (subject && subject.questions.length > 0) {
+            console.log("Resuming quiz...");
+            startQuiz(currentSubjectIndex, true); // True flag for resuming
+            return;
+        } else {
+            clearQuizState();
+        }
+    }
+
     renderHome();
 }
 
@@ -272,7 +286,7 @@ cancelDeleteBtn.addEventListener('click', () => {
 
 
 // Quiz Logic 
-function startQuiz(index) {
+function startQuiz(index, isResuming = false) {
     currentSubjectIndex = index;
     const subject = allSubjects[index];
 
@@ -281,11 +295,17 @@ function startQuiz(index) {
         return;
     }
 
-    currentQuestionIndex = 0;
-    score = 0;
-    userAnswers = new Array(subject.questions.length).fill(null);
-    visitedQuestions = new Set(); // Track visited questions
-    console.log("Starting quiz. Questions:", subject.questions.length);
+    if (!isResuming) {
+        // Start fresh
+        currentQuestionIndex = 0;
+        score = 0;
+        userAnswers = new Array(subject.questions.length).fill(null);
+        visitedQuestions = new Set();
+        clearQuizState(); // Clear any old state before starting new
+        saveQuizState(); // init save
+    }
+
+    console.log(isResuming ? "Resuming quiz..." : "Starting new quiz...");
 
     homeSection.classList.add('hidden');
     resultSection.classList.add('hidden');
