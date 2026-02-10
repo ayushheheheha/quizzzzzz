@@ -354,10 +354,12 @@ function handleAnswer(selected, btnElement, correct) {
     const allBtns = optionsContainer.querySelectorAll('.option-btn');
     allBtns.forEach(b => b.disabled = true);
 
+    // Save user answer
+    userAnswers[currentQuestionIndex] = selected;
+
     if (selected === correct) {
         btnElement.classList.add('correct');
-        score += 10;
-        currentScoreEl.textContent = score;
+        // Score update handled by updateHeader -> calculateScore
     } else {
         btnElement.classList.add('wrong');
         allBtns.forEach(b => {
@@ -366,6 +368,10 @@ function handleAnswer(selected, btnElement, correct) {
             }
         });
     }
+
+    // Update UI
+    updateHeader(); // Re-calculates score
+    updatePaletteActiveState(); // Updates map colors
 
     // Auto-advance removed as per request
     // setTimeout(() => {
