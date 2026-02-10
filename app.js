@@ -73,6 +73,7 @@ function renderHome() {
         card.innerHTML = `
             <h3>${subject.name}</h3>
             <p>${subject.questions ? subject.questions.length : 0} Questions</p>
+            <div class="add-questions-btn" title="Add More Questions">+</div>
             <div class="delete-subject-btn" title="Delete Subject">&times;</div>
         `;
 
@@ -82,6 +83,9 @@ function renderHome() {
             if (e.target.classList.contains('delete-subject-btn')) {
                 e.stopPropagation();
                 initDeleteSubject(subject.id);
+            } else if (e.target.classList.contains('add-questions-btn')) {
+                e.stopPropagation();
+                openAddModal(subject.name);
             } else {
                 startQuiz(index);
             }
@@ -92,11 +96,24 @@ function renderHome() {
 }
 
 // Modal Logic
-addSubjectBtn.addEventListener('click', () => {
+function openAddModal(existingName = '') {
     addModal.classList.remove('hidden');
-    subjectNameInput.value = '';
+    subjectNameInput.value = existingName;
     jsonInput.value = '';
     modalError.textContent = '';
+
+    const titleEl = addModal.querySelector('h2');
+    if (existingName) {
+        titleEl.textContent = `Add Questions to "${existingName}"`;
+        // subjectNameInput.disabled = true; // Optional: lock it to ensure safety
+    } else {
+        titleEl.textContent = 'Add New Subject';
+        // subjectNameInput.disabled = false;
+    }
+}
+
+addSubjectBtn.addEventListener('click', () => {
+    openAddModal();
 });
 
 closeModalBtn.addEventListener('click', () => {
