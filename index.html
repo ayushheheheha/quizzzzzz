@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizFlow - Premium Practice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="logo">QuizFlow</div>
+            <button id="add-subject-btn" class="btn-primary">
+                <span>+</span> Add Subject
+            </button>
+        </header>
+
+        <!-- Home Section: Subject List -->
+        <section id="home-section" class="active-section">
+            <div class="welcome-text">
+                <h1>Master Your Knowledge</h1>
+                <p>Select a subject to start practicing or add your own.</p>
+            </div>
+            <div id="subject-list" class="grid-container">
+                <!-- Subject Cards injected here -->
+            </div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section id="quiz-section" class="hidden">
+            <div class="quiz-header">
+                <button id="exit-quiz-btn" class="btn-text">← Exit</button>
+                <div class="progress-container">
+                    <span id="question-counter">Question 1/10</span>
+                    <div class="progress-bar"><div id="progress-fill"></div></div>
+                </div>
+                <div class="score-badge">Score: <span id="current-score">0</span></div>
+            </div>
+            
+            <div class="question-card">
+                <h2 id="question-text">Loading Question...</h2>
+                <div id="options-container" class="options-grid">
+                    <!-- Options injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Result Section -->
+        <section id="result-section" class="hidden">
+            <div class="result-card">
+                <h1>Quiz Completed!</h1>
+                <div class="score-display">
+                    <span id="final-score">0</span>
+                    <span class="total-score">/ <span id="total-questions">0</span></span>
+                </div>
+                <p id="result-message">Great job!</p>
+                <div class="action-buttons">
+                    <button id="retry-btn" class="btn-secondary">Retry Quiz</button>
+                    <button id="home-btn" class="btn-primary">Back to Home</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Subject Modal -->
+        <div id="add-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-modal" class="close-btn">&times;</span>
+                <h2>Add New Subject</h2>
+                <div class="form-group">
+                    <label for="subject-name">Subject Name</label>
+                    <input type="text" id="subject-name" placeholder="e.g., Biology, History">
+                </div>
+                <div class="form-group">
+                    <label for="json-input">Paste Questions (JSON)</label>
+                    <textarea id="json-input" placeholder='[
+  {
+    "question": "What is 2+2?",
+    "options": ["3", "4", "5", "6"],
+    "answer": "4"
+  }
+]'></textarea>
+                    <p class="hint">Format: Array of objects with 'question', 'options' (array), and 'answer'.</p>
+                </div>
+                <!-- <div class="form-group">
+                  <label for="json-file-input">Or Upload JSON File</label>
+                  <input type="file" id="json-file-input" accept=".json">
+                </div> -->
+                <button id="save-subject-btn" class="btn-primary full-width">Save Subject</button>
+                <div id="modal-error" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+     <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content small-modal">
+            <h3>Delete this subject?</h3>
+            <p>This action cannot be undone.</p>
+            <div class="action-buttons">
+                <button id="cancel-delete" class="btn-secondary">Cancel</button>
+                <button id="confirm-delete" class="btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
