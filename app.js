@@ -279,6 +279,7 @@ function startQuiz(index) {
     currentQuestionIndex = 0;
     score = 0;
     userAnswers = new Array(subject.questions.length).fill(null);
+    console.log("Starting quiz. Questions:", subject.questions.length);
 
     homeSection.classList.add('hidden');
     resultSection.classList.add('hidden');
@@ -286,8 +287,8 @@ function startQuiz(index) {
 
     renderQuestion();
     updateHeader();
+    renderPalette(); // Render palette BEFORE updating buttons/state potentially
     updateNavButtons();
-    renderPalette();
 }
 
 function updateHeader() {
@@ -440,9 +441,23 @@ homeBtn.addEventListener('click', () => {
 
 
 
+
 function renderPalette() {
+    console.log("Rendering Palette...");
+    const paletteGrid = document.getElementById('question-palette-grid'); // Re-fetch to be safe
+    if (!paletteGrid) {
+        console.error("Palette Grid Element not found!");
+        return;
+    }
     paletteGrid.innerHTML = '';
+
+    if (currentSubjectIndex === -1 || !allSubjects[currentSubjectIndex]) {
+        console.error("No current subject selected");
+        return;
+    }
+
     const subject = allSubjects[currentSubjectIndex];
+    console.log(`Rendering palette for ${subject.questions.length} questions`);
 
     subject.questions.forEach((_, i) => {
         const btn = document.createElement('div');
@@ -450,7 +465,7 @@ function renderPalette() {
         btn.textContent = i + 1;
 
         // Initial state
-        if (userAnswers[i] !== null) {
+        if (userAnswers && userAnswers[i] !== null) {
             btn.classList.add('answered');
         }
         if (i === currentQuestionIndex) {
@@ -458,6 +473,7 @@ function renderPalette() {
         }
 
         btn.onclick = () => {
+            console.log("Palette clicked:", i);
             currentQuestionIndex = i;
             renderQuestion();
             updateHeader();
@@ -469,6 +485,9 @@ function renderPalette() {
 }
 
 function updatePaletteActiveState() {
+    const paletteGrid = document.getElementById('question-palette-grid');
+    if (!paletteGrid) return;
+
     const btns = paletteGrid.querySelectorAll('.palette-btn');
     btns.forEach((btn, i) => {
         // Reset current
@@ -479,7 +498,7 @@ function updatePaletteActiveState() {
         }
 
         // Update answered state (in case we want real-time feedback without re-rendering all)
-        if (userAnswers[i] !== null) {
+        if (userAnswers && userAnswers[i] !== null) {
             btn.classList.add('answered');
         }
     });
