@@ -392,6 +392,7 @@ function handleAnswer(selected, btnElement, correct) {
     // Update UI
     updateHeader(); // Re-calculates score
     updatePaletteActiveState(); // Updates map colors
+    saveQuizState(); // Save progress
 
     // Auto-advance removed as per request
     // setTimeout(() => {
@@ -406,6 +407,7 @@ prevBtn.addEventListener('click', () => {
         renderQuestion();
         updateHeader();
         updateNavButtons();
+        saveQuizState();
     }
 });
 
@@ -416,8 +418,10 @@ nextBtn.addEventListener('click', () => {
         renderQuestion();
         updateHeader();
         updateNavButtons();
+        saveQuizState();
     } else {
         showResult();
+        clearQuizState();
     }
 });
 
@@ -444,8 +448,11 @@ function nextQuestion() {
     if (currentQuestionIndex < subject.questions.length) {
         renderQuestion();
         updateHeader();
+        updateNavButtons(); // Ensure buttons update
+        saveQuizState();
     } else {
         showResult();
+        clearQuizState(); // Clear state when finished
     }
 }
 
@@ -476,10 +483,12 @@ exitQuizBtn.addEventListener('click', () => {
     homeSection.classList.remove('hidden');
     quizSection.classList.add('hidden');
     resultSection.classList.add('hidden');
+    clearQuizState();
     renderHome();
 });
 
 retryBtn.addEventListener('click', () => {
+    // startQuiz clears state if not resuming
     startQuiz(currentSubjectIndex);
 });
 
@@ -487,6 +496,7 @@ homeBtn.addEventListener('click', () => {
     homeSection.classList.remove('hidden');
     quizSection.classList.add('hidden');
     resultSection.classList.add('hidden');
+    clearQuizState();
     renderHome();
 });
 
@@ -581,6 +591,69 @@ function updatePaletteActiveState() {
             btn.classList.add('current');
         }
     });
+}
+
+
+// Local Storage Keys
+const QUIZ_STATE_KEY = 'quiz_active_state';
+
+function saveQuizState() {
+    if (currentSubjectIndex === -1) return;
+
+    // Check if subject is valid before saving
+    if (!allSubjects[currentSubjectIndex]) return;
+
+    const state = {
+        currentSubjectIndex,
+        currentQuestionIndex,
+        userAnswers,
+        visitedQuestions: Array.from(visitedQuestions), // Convert Set to Array
+        timestamp: Date.now()
+    };
+
+    try {
+        localStorage.setItem(QUIZ_STATE_KEY, JSON.stringify(state));
+        console.log("Quiz state saved.");
+    } catch (e) {
+        console.error("Local Storage Error:", e);
+    }
+}
+
+function loadQuizState() {
+    const saved = localStorage.getItem(QUIZ_STATE_KEY);
+    if (!saved) return false;
+
+    try {
+        const state = JSON.parse(saved);
+
+        // Validate if subject still exists (could be deleted)
+        if (!allSubjects[state.currentSubjectIndex]) {
+            clearQuizState();
+            return false;
+        }
+
+        currentSubjectIndex = state.currentSubjectIndex;
+        currentQuestionIndex = state.currentQuestionIndex;
+        userAnswers = state.userAnswers || []; // Restore answers
+        // Restore Set from Array
+        visitedQuestions = new Set(state.visitedQuestions || []);
+
+        console.log("Quiz state restored.");
+        return true;
+    } catch (e) {
+        console.error("Error loading quiz state:", e);
+        clearQuizState();
+        return false;
+    }
+}
+
+function clearQuizState() {
+    try {
+        localStorage.removeItem(QUIZ_STATE_KEY);
+        console.log("Quiz state cleared.");
+    } catch (e) {
+        console.error("Error clearing quiz state:", e);
+    }
 }
 
 
