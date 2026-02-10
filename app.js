@@ -29,6 +29,10 @@ const currentScoreEl = document.getElementById('current-score');
 const exitQuizBtn = document.getElementById('exit-quiz-btn');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
+const paletteToggleBtn = document.getElementById('palette-toggle-btn');
+const paletteModal = document.getElementById('question-palette-modal');
+const paletteGrid = document.getElementById('question-palette-grid');
+const closePaletteBtn = document.getElementById('close-palette-btn');
 
 // Result Elements
 const finalScoreEl = document.getElementById('final-score');
@@ -387,4 +391,93 @@ homeBtn.addEventListener('click', () => {
     renderHome();
 });
 
-window.supabase = supabase;
+// State management for navigation
+renderQuestion();
+updateHeader();
+updateNavButtons();
+renderPalette(); // Render initial palette
+}
+
+function updateHeader() {
+    // ... existing code ...
+    // Also update palette active state
+    updatePaletteActiveState();
+}
+
+// ... existing updateHeader ...
+
+function renderPalette() {
+    paletteGrid.innerHTML = '';
+    const subject = allSubjects[currentSubjectIndex];
+
+    subject.questions.forEach((_, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'palette-btn';
+        btn.textContent = i + 1;
+
+        // Initial state
+        if (userAnswers[i] !== null) {
+            btn.classList.add('answered');
+        }
+        if (i === currentQuestionIndex) {
+            btn.classList.add('current');
+        }
+
+        btn.onclick = () => {
+            currentQuestionIndex = i;
+            renderQuestion();
+            updateHeader();
+            updateNavButtons();
+            // updatePaletteActiveState(); // handled in updateHeader? or separate
+            // If modal is open, maybe close it? Or keep it open. 
+            // User typically wants to jump multiple times or just once.
+            // Let's keep it open or optional. Structure implies it overlays, so maybe close it for better view?
+            // Let's toggle it off to see the question.
+            paletteModal.classList.add('hidden');
+        };
+
+        paletteGrid.appendChild(btn);
+    });
+}
+
+function updatePaletteActiveState() {
+    const btns = paletteGrid.querySelectorAll('.palette-btn');
+    btns.forEach((btn, i) => {
+        // Reset current
+        btn.classList.remove('current');
+
+        if (i === currentQuestionIndex) {
+            btn.classList.add('current');
+        }
+
+        // Update answered state (in case we want real-time feedback without re-rendering all)
+        if (userAnswers[i] !== null) {
+            btn.classList.add('answered');
+        }
+    });
+}
+
+// Palette Toggles
+paletteToggleBtn.addEventListener('click', () => {
+    paletteModal.classList.remove('hidden');
+    renderPalette(); // Refresh just in case
+});
+
+closePaletteBtn.addEventListener('click', () => {
+    paletteModal.classList.add('hidden');
+});
+
+// Window click for palette modal
+// Merged into existing window click listener if possible, or new one.
+// Existing: window.addEventListener('click', (e) => { ... }) handles modals.
+// Let's just double check the existing one handles generic class 'modal' or specific.
+// The existing one checks `if (e.target === addModal)`. We need to add `paletteModal`.
+
+window.addEventListener('click', (e) => {
+    if (e.target === paletteModal) {
+        paletteModal.classList.add('hidden');
+    }
+});
+
+// ... existing code ...
+

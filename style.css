@@ -343,6 +343,56 @@ button {
     box-shadow: none;
 }
 
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    box-shadow: none;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.palette-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.palette-btn:hover {
+    border-color: var(--primary);
+    color: white;
+}
+
+.palette-btn.current {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.2);
+    color: white;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.palette-btn.answered {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--success);
+    color: var(--success);
+}
+
 /* Result Section */
 .result-card {
     text-align: center;
