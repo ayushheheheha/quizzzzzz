@@ -284,6 +284,8 @@ function startQuiz(index) {
 
     renderQuestion();
     updateHeader();
+    updateNavButtons();
+    renderPalette();
 }
 
 function updateHeader() {
@@ -295,7 +297,11 @@ function updateHeader() {
     const progress = ((currentQuestionIndex) / total) * 100;
     progressFill.style.width = `${progress}%`;
 
-    currentScoreEl.textContent = score;
+    // Calculate score based on userAnswers
+    const currentScore = calculateScore();
+    currentScoreEl.textContent = currentScore;
+
+    updatePaletteActiveState();
 }
 
 function renderQuestion() {
@@ -391,20 +397,7 @@ homeBtn.addEventListener('click', () => {
     renderHome();
 });
 
-// State management for navigation
-renderQuestion();
-updateHeader();
-updateNavButtons();
-renderPalette(); // Render initial palette
-}
 
-function updateHeader() {
-    // ... existing code ...
-    // Also update palette active state
-    updatePaletteActiveState();
-}
-
-// ... existing updateHeader ...
 
 function renderPalette() {
     paletteGrid.innerHTML = '';
