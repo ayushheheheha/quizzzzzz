@@ -369,6 +369,22 @@ nextBtn.addEventListener('click', () => {
     }
 });
 
+function updateNavButtons() {
+    const subject = allSubjects[currentSubjectIndex];
+    if (!subject) return;
+
+    prevBtn.disabled = currentQuestionIndex === 0;
+
+    if (currentQuestionIndex === subject.questions.length - 1) {
+        nextBtn.textContent = 'Finish Quiz';
+    } else {
+        nextBtn.textContent = 'Next ❯';
+    }
+
+    // Also update palette active state here to be safe
+    updatePaletteActiveState();
+}
+
 function nextQuestion() {
     const subject = allSubjects[currentSubjectIndex];
     currentQuestionIndex++;
