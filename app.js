@@ -443,45 +443,61 @@ homeBtn.addEventListener('click', () => {
 
 
 function renderPalette() {
-    console.log("Rendering Palette...");
-    const paletteGrid = document.getElementById('question-palette-grid'); // Re-fetch to be safe
-    if (!paletteGrid) {
-        console.error("Palette Grid Element not found!");
-        return;
-    }
-    paletteGrid.innerHTML = '';
+    try {
+        console.log("Rendering Palette...");
+        const paletteGrid = document.getElementById('question-palette-grid');
 
-    if (currentSubjectIndex === -1 || !allSubjects[currentSubjectIndex]) {
-        console.error("No current subject selected");
-        return;
-    }
-
-    const subject = allSubjects[currentSubjectIndex];
-    console.log(`Rendering palette for ${subject.questions.length} questions`);
-
-    subject.questions.forEach((_, i) => {
-        const btn = document.createElement('div');
-        btn.className = 'palette-btn';
-        btn.textContent = i + 1;
-
-        // Initial state
-        if (userAnswers && userAnswers[i] !== null) {
-            btn.classList.add('answered');
+        if (!paletteGrid) {
+            console.error("Palette Grid Element not found!");
+            alert("Error: Palette Grid element missing!");
+            return;
         }
-        if (i === currentQuestionIndex) {
-            btn.classList.add('current');
+        paletteGrid.innerHTML = '';
+
+        if (currentSubjectIndex === -1 || !allSubjects[currentSubjectIndex]) {
+            console.error("No current subject selected");
+            return;
         }
 
-        btn.onclick = () => {
-            console.log("Palette clicked:", i);
-            currentQuestionIndex = i;
-            renderQuestion();
-            updateHeader();
-            updateNavButtons();
-        };
+        const subject = allSubjects[currentSubjectIndex];
 
-        paletteGrid.appendChild(btn);
-    });
+        if (!Array.isArray(subject.questions)) {
+            console.error("subject.questions is NOT an array:", subject.questions);
+            alert("Error: Questions data is malformed (not an array).");
+            return;
+        }
+
+        console.log(`Rendering palette for ${subject.questions.length} questions`);
+
+        subject.questions.forEach((_, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'palette-btn';
+            btn.textContent = i + 1;
+
+            // Initial state
+            // Inline null check for safety
+            if (typeof userAnswers !== 'undefined' && userAnswers[i] !== null && userAnswers[i] !== undefined) {
+                btn.classList.add('answered');
+            }
+            if (i === currentQuestionIndex) {
+                btn.classList.add('current');
+            }
+
+            btn.onclick = () => {
+                console.log("Palette clicked:", i);
+                currentQuestionIndex = i;
+                renderQuestion();
+                updateHeader();
+                updateNavButtons();
+            };
+
+            paletteGrid.appendChild(btn);
+        });
+
+    } catch (e) {
+        console.error("Error in renderPalette:", e);
+        alert("System Error in renderPalette: " + e.message);
+    }
 }
 
 function updatePaletteActiveState() {
