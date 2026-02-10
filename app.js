@@ -185,6 +185,10 @@ saveSubjectBtn.addEventListener('click', async () => {
             if (!q.question || !q.options || !q.answer || !Array.isArray(q.options)) {
                 throw new Error(`Question #${i + 1} is missing required fields.`);
             }
+            // Generate unique ID if missing
+            if (!q.id) {
+                q.id = crypto.randomUUID();
+            }
         });
 
         // Check if exists in DB (to avoid creating duplicates if name matches explicitly, though logic handles updates)
